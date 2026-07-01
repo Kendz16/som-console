@@ -7,8 +7,15 @@ const menu = [
 let orderCart = [];
 
 const displayMenu = () => {
-  console.log("\n===== SOMS V2 MENU =====");
+  console.log("\n===== SOMS MENU =====");
   menu.forEach(i => console.log(`${i.code} | ${i.name} | ₱${i.price}`));
+};
+
+const viewCart = () => {
+  if (orderCart.length === 0) return alert("Cart is empty");
+  console.log("\n===== YOUR CART =====");
+  orderCart.forEach(i => console.log(`${i.name} x${i.quantity} = ₱${i.subtotal}`));
+  console.log(`Subtotal: ₱${computeTotal().toFixed(2)}`);
 };
 
 const addToCart = () => {
@@ -17,12 +24,31 @@ const addToCart = () => {
   if (!item) return alert("Error: Invalid code");
   const qty = Number (prompt("Enter quantity: "));
   if (isNaN(qty) || qty <= 0) return alert("Error: Quantity must be > 0");
+
+   const existing = orderCart.find(i => i.code === code);
+  if (existing) {
+    existing.quantity += qty;
+    existing.subtotal = existing.price * existing.quantity;
+  } else {
+
   orderCart.push({
-    code: item.code, name: item.name, price: item.price,
-    quantity: qty, subtotal: item.price * qty,
-    timestamp: new Date().toISOString() // V2 Feature
+    code: item.code, 
+    name: item.name, 
+    price: item.price,
+    quantity: qty, 
+    subtotal: item.price * qty,
+    timestamp: new Date().toISOString()
   });
+  }
   alert(`Added: ${item.name} x${qty}`);
+};
+
+const removeFromCart = () => {
+  const code = prompt("Enter product code to remove: ").toUpperCase();
+  const index = orderCart.findIndex(i => i.code === code);
+  if (index === -1) return alert("Item not in cart");
+  orderCart.splice(index, 1);
+  alert("Item removed");
 };
 
 
@@ -55,16 +81,15 @@ const applyDiscount = (total) => {
   return { final: total - discount, discount: discount, type: type.toUpperCase() };
 };
 
-const main = () => {
-  displayMenu();
-  addToCart();
-  const subtotal = computeTotal(); 
+const checkout = () => {
+  if (orderCart.length === 0) return alert("Cart is empty. Cannot checkout."); 
   
-  console.log("\n===== CHECKOUT V2.1 ====="); 
+  console.log("\n===== CHECKOUT ====="); 
   orderCart.forEach(i => console.log(`${i.name} x${i.quantity} = ₱${i.subtotal} | ${i.timestamp}`)); 
-  console.log(`Subtotal: ₱${subtotal.toFixed(2)}`); // Default view
+  const subtotal = computeTotal();
+  console.log(`Subtotal: ₱${subtotal.toFixed(2)}`);
 
-  const discountInfo = applyDiscount(subtotal); // Discount is now optional/opt-in
+  const discountInfo = applyDiscount(subtotal);
 
   if (discountInfo.discount > 0) {
     console.log(`Discount -₱${discountInfo.discount.toFixed(2)} [${discountInfo.type}]`); 
@@ -72,6 +97,25 @@ const main = () => {
     console.log(`Customer Type: Regular`);
   }
   console.log(`FINAL TOTAL: ₱${discountInfo.final.toFixed(2)}`); 
-}; 
+  alert("Thank you for ordering!");
+  orderCart = [];
+ }; 
+
+  const main = () => {
+    let running = true;
+    while (running) { 
+      const choice = prompt ("[A]dd to Cart\n[V]iew Cart\n[R]emove Item\n[C]heckout\n[E]xit\nEnter choice: ").toUpperCase();
+
+      switch(choice) {
+      case "A": displayMenu(); addToCart(); break;
+      case "V": viewCart(); break;
+      case "R": removeFromCart(); break;
+      case "C": checkout(); break;
+      case "E": running = false; alert("Goodbye!"); break;
+      default: alert("Invalid choice");
+
+      }
+  }
+};
 
 main();
