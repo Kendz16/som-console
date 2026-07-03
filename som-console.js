@@ -5,23 +5,28 @@ const menu = [
   { code: "D1", name: "Peach Mango Pie", price: 39, category: "Dessert" }
 ];
 let orderCart = [];
+let firstOrderDone = false;
 
 const displayMenu = () => {
-  console.log("\n===== SOMS MENU =====");
-  menu.forEach(i => console.log(`${i.code} | ${i.name} | ₱${i.price}`));
+    let menuText = "===== WELCOME TO SOMS =====\n";
+ menu.forEach(i => menuText += `${i.code} | ${i.name} | ₱${i.price} | ${i.category}\n`);
+  menuText += "---------------------------\nType a product code to start ordering. Ex: F1";
+  alert(menuText);
 };
 
 const viewCart = () => {
   if (orderCart.length === 0) return alert("Cart is empty");
-  console.log("\n===== YOUR CART =====");
-  orderCart.forEach(i => console.log(`${i.name} x${i.quantity} = ₱${i.subtotal}`));
-  console.log(`Subtotal: ₱${computeTotal().toFixed(2)}`);
+  let cartText = "===== YOUR CART =====\n";
+  orderCart.forEach(i => cartText += `${i.name} x${i.quantity} = ₱${i.subtotal}\n`);
+  cartText += `----------------------\nSubtotal: ₱${computeTotal().toFixed(2)}`;
+  alert(cartText);
 };
 
-const addToCart = () => {
-  const code = prompt("Enter product code: ").toUpperCase();
+const addToCart = (codeInput = null) => {
+  const code = codeInput? codeInput : prompt("Enter product code: ").toUpperCase();
   const item = menu.find(i => i.code === code);
   if (!item) return alert("Error: Invalid code");
+
   const qty = Number (prompt("Enter quantity: "));
   if (isNaN(qty) || qty <= 0) return alert("Error: Quantity must be > 0");
 
@@ -41,6 +46,7 @@ const addToCart = () => {
   });
   }
   alert(`Added: ${item.name} x${qty}`);
+  firstOrderDone = true;
 };
 
 const removeFromCart = () => {
@@ -48,7 +54,18 @@ const removeFromCart = () => {
   const index = orderCart.findIndex(i => i.code === code);
   if (index === -1) return alert("Item not in cart");
   orderCart.splice(index, 1);
+   if(orderCart.length === 0) firstOrderDone = false;
   alert("Item removed");
+};
+
+const modifyCart = () => {
+  const code = prompt("Enter product code to modify: ").toUpperCase();
+  const index = orderCart.findIndex(i => i.code === code);
+  if (index === -1) return alert("Item not in cart");
+  const newQty = Number(prompt("Enter new quantity: "));
+  if (isNaN(newQty) || newQty <= 0) return alert("Error: Quantity must be > 0");
+  orderCart.splice(index, 1, {...orderCart[index], quantity: newQty, subtotal: orderCart[index].price * newQty});
+  alert("Quantity updated");
 };
 
 
@@ -82,39 +99,55 @@ const applyDiscount = (total) => {
 };
 
 const checkout = () => {
-  if (orderCart.length === 0) return alert("Cart is empty. Cannot checkout."); 
-  
-  console.log("\n===== CHECKOUT ====="); 
-  orderCart.forEach(i => console.log(`${i.name} x${i.quantity} = ₱${i.subtotal} | ${i.timestamp}`)); 
+   let receipt = "===== RECEIPT =====\n";
+  orderCart.forEach(i => receipt += `${i.name} x${i.quantity} = ₱${i.subtotal} | ${i.timestamp}\n`);
   const subtotal = computeTotal();
-  console.log(`Subtotal: ₱${subtotal.toFixed(2)}`);
-
+  receipt += `----------------------\nSubtotal: ₱${subtotal.toFixed(2)}\n`;
   const discountInfo = applyDiscount(subtotal);
+  if (discountInfo.discount > 0) { receipt += `Discount -₱${discountInfo.discount.toFixed(2)} [${discountInfo.type}]\n`; }
+  else { receipt += `Customer Type: Regular\n`; }
+  receipt += `FINAL TOTAL: ₱${discountInfo.final.toFixed(2)}`;
+  alert(receipt);
 
-  if (discountInfo.discount > 0) {
-    console.log(`Discount -₱${discountInfo.discount.toFixed(2)} [${discountInfo.type}]`); 
+  const confirmOrder = prompt("Confirm Order? [Y/N]: ").toUpperCase();
+  if (confirmOrder === "Y") {
+    alert("Order Confirmed. Thank you!\n");
+    orderCart = [];
+    firstOrderDone = false;
   } else {
-    console.log(`Customer Type: Regular`);
+    alert("Order Cancelled.");
   }
-  console.log(`FINAL TOTAL: ₱${discountInfo.final.toFixed(2)}`); 
-  alert("Thank you for ordering!");
-  orderCart = [];
- }; 
+}; 
 
   const main = () => {
+    displayMenu();
     let running = true;
-    while (running) { 
-      const choice = prompt ("[A]dd to Cart\n[V]iew Cart\n[R]emove Item\n[C]heckout\n[E]xit\nEnter choice: ").toUpperCase();
+    while (running) {
+    if (!firstOrderDone) {
+      const firstCode = prompt("Enter product code to order or [E] to exit: ").toUpperCase();
+      if (firstCode === "E") { running = false; alert("Goodbye!"); }
+      else { addToCart(firstCode); } // <- Direct add agad
+    } else {
+    
+      const choice = prompt("[A]dd More\n[V]iew Cart\n[R]emove Item\n[M]odify Qty\n[C]heckout\n[E]xit\nEnter choice: ").toUpperCase();
 
       switch(choice) {
-      case "A": displayMenu(); addToCart(); break;
-      case "V": viewCart(); break;
-      case "R": removeFromCart(); break;
-      case "C": checkout(); break;
-      case "E": running = false; alert("Goodbye!"); break;
+      case "A": displayMenu(); addToCart(); 
+      break;
+      case "V": viewCart();
+      break;
+      case "R": removeFromCart(); 
+      break;
+      case "M": modifyCart(); 
+      break;
+      case "C": checkout(); 
+      break;
+      case "E": running = false; alert("Goodbye!"); 
+      break;
       default: alert("Invalid choice");
 
       }
+    }
   }
 };
 
