@@ -62,8 +62,16 @@ const modifyCart = () => {
   const code = prompt("Enter product code to modify: ").toUpperCase();
   const index = orderCart.findIndex(i => i.code === code);
   if (index === -1) return alert("Item not in cart");
-  const newQty = Number(prompt("Enter new quantity: "));
+
+  const currentQty = orderCart[index].quantity;
+  const newQty = Number(prompt(`Enter new quantity. Current: ${currentQty}: `));
+
   if (isNaN(newQty) || newQty <= 0) return alert("Error: Quantity must be > 0");
+
+  if (newQty === currentQty) {
+    return alert("No changes made. Quantity is the same.");
+  }
+
   orderCart.splice(index, 1, {...orderCart[index], quantity: newQty, subtotal: orderCart[index].price * newQty});
   alert("Quantity updated");
 };
@@ -100,7 +108,10 @@ const applyDiscount = (total) => {
 
 const checkout = () => {
    let receipt = "===== RECEIPT =====\n";
-  orderCart.forEach(i => receipt += `${i.name} x${i.quantity} = ₱${i.subtotal} | ${i.timestamp}\n`);
+  orderCart.forEach(i => {
+    const time = new Date(i.timestamp).toLocaleString();
+    receipt += `${i.name} x${i.quantity} = ₱${i.subtotal} | ${time}\n`; 
+  }); 
   const subtotal = computeTotal();
   receipt += `----------------------\nSubtotal: ₱${subtotal.toFixed(2)}\n`;
   const discountInfo = applyDiscount(subtotal);
@@ -114,9 +125,11 @@ const checkout = () => {
     alert("Order Confirmed. Thank you!\n");
     orderCart = [];
     firstOrderDone = false;
-  } else {
-    alert("Order Cancelled.");
-  }
+ } else {
+  alert("Order Cancelled. Cart has been reset.");
+  orderCart = []; 
+  firstOrderDone = false;
+}
 }; 
 
   const main = () => {
